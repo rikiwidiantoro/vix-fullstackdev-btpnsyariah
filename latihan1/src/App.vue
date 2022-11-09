@@ -1,17 +1,33 @@
-<template>
+<!-- eslint-disable vue/require-v-for-key -->
+<!-- <template>
   <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/>
-</template>
+</template> -->
+
+<!-- reading 1 -->
+<!-- <template>
+  <input type="text" v-model="name" />
+  <h4>Name : {{ name }}</h4>
+</template> -->
+<!-- reading 1 -->
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+// import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
+
+  // reading 1
+  data() {
+    return {
+      name: ""
+    }
+  },
+    // reading 1
+
+
 }
+
 </script>
 
 <style>
