@@ -5,10 +5,10 @@
 </template> -->
 
 <!-- reading 1 -->
-<!-- <template>
+<template>
   <input type="text" v-model="name" />
   <h4>Name : {{ name }}</h4>
-</template> -->
+</template>
 <!-- reading 1 -->
 
 <script>
