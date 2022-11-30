@@ -2,7 +2,9 @@ package main
 
 import (
 	// "fmt"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -56,6 +58,10 @@ func handleRequests() {
 
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/api/products", createProduct).Methods("POST")
+	myRouter.HandleFunc("/api/products", getProducts).Methods("GET")
+	myRouter.HandleFunc("/api/products/{id}", getProduct).Methods("GET")
+	myRouter.HandleFunc("/api/products/{id}", updateProduct).Methods("PUT")
+	myRouter.HandleFunc("/api/products/{id}", deleteProduct).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":9999", myRouter))
 }
@@ -65,5 +71,140 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func createProduct(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Create Products")
+	// fmt.Fprintf(w, "Create Products")
+
+	// bikin variabel untuk menangkap payload
+	payloads, _ := ioutil.ReadAll(r.Body)
+
+	// bikin variabel struct product
+	var product Product
+
+	// casting ke stuck product
+	json.Unmarshal(payloads, &product)
+
+	// data yg sudah ditangkap lalu di inputkan ke tabel products
+	db.Create(&product)
+
+	// result
+	res:= Result{Code: 200, Data: product, Message: "Berhasil menambahkan produk"}
+	result, err := json.Marshal(res)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// membuat respon
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+
+func getProducts(w http.ResponseWriter, r *http.Request) {
+	// bikin variabel
+	products := []Product{}
+
+	// mengambil data
+	db.Find(&products)
+
+	// struct result
+	res := Result{Code: 200, Data: products, Message: "Berhasil menampilkan produk"}
+	results, err := json.Marshal(res)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// membuat respon
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(results)
+}
+
+
+// single product
+func getProduct(w http.ResponseWriter, r *http.Request) {
+	// mengambil single product
+	vars := mux.Vars(r)
+	productID := vars["id"]
+
+	// bikin variabel
+	var product Product
+	db.First(&product, productID)
+
+	// struct result
+	res := Result{Code: 200, Data: product, Message: "Berhasil menampilkan produk"}
+	result, err := json.Marshal(res)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// membuat respon
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+
+// update
+func updateProduct(w http.ResponseWriter, r *http.Request) {
+	// mengambil single product
+	vars := mux.Vars(r)
+	productID := vars["id"]
+
+	// bikin variabel untuk menangkap payload
+	payloads, _ := ioutil.ReadAll(r.Body)
+
+	// bikin variabel struct product
+	var productUpdates Product
+
+	// casting ke stuck product
+	json.Unmarshal(payloads, &productUpdates)
+
+	// mengambil eksisting product
+	var product Product
+	db.First(&product, productID)
+
+	// update ke database
+	db.Model(&product).Update(productUpdates)
+
+	// result
+	res:= Result{Code: 200, Data: product, Message: "Berhasil mengubah produk"}
+	result, err := json.Marshal(res)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// membuat respon
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+
+// delete
+func deleteProduct(w http.ResponseWriter, r *http.Request) {
+	// mengambil single product
+	vars := mux.Vars(r)
+	productID := vars["id"]
+
+	var product Product
+
+	db.First(&product, productID)
+	db.Delete(&product)
+
+	// struct result
+	res := Result{Code: 200, Message: "Berhasil menghapus produk"}
+	result, err := json.Marshal(res)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// membuat respon
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }
